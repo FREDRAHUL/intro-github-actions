@@ -1,0 +1,25 @@
+name: Needs Example
+
+on:
+  workflow_dispatch:   # Trigger manually
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 1
+        run: echo "Job 1 is running"
+
+  job2:
+    runs-on: ubuntu-latest
+    needs: job1    # Job 2 waits for Job 1
+    steps:
+      - name: Step 2
+        run: echo "Job 2 runs AFTER Job 1"
+
+  job3:
+    runs-on: ubuntu-latest
+    needs: job2    # Job 3 waits for Job 2
+    steps:
+      - name: Step 3
+        run: echo "Job 3 runs AFTER Job 2"
