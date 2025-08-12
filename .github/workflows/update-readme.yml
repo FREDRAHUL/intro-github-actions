@@ -1,0 +1,54 @@
+name: Update Dynamic README  # Name of the workflow
+
+on:
+  schedule:
+    - cron:  '30 5,17 * * *'     # ⏰ Runs every day at midnight UTC
+  workflow_dispatch:         # 🚀 Allows manual trigger from GitHub UI
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest   # 🖥 Use the latest Ubuntu runner provided by GitHub
+
+    steps:
+      # Step 1: Check out the repository's latest code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # We will set our own credentials later
+
+      # Step 2: Generate dynamic content and update README
+      - name: Update README.md
+        run: |
+          # Save the current date/time in UTC
+          LAST_UPDATE=$(date -u "+%Y-%m-%d %H:%M:%S UTC")
+          
+          # Create a temporary file to hold the updated README
+          cp README.md README_TEMP.md
+          
+          # Remove any old "Last updated" section
+          sed -i '/<!-- LastUpdate -->/d' README_TEMP.md
+          
+          # Append the new "Last updated" section
+          echo "" >> README_TEMP.md
+          echo "<!-- LastUpdate -->" >> README_TEMP.md
+          echo "⏳ **Last updated:** $LAST_UPDATE" >> README_TEMP.md
+
+          # Replace the original README with updated version
+          mv README_TEMP.md README.md
+
+      # Step 3: Commit & push changes back to the repository
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"  # Set commit author
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add README.md
+          
+          # Commit only if there are changes
+          git diff --cached --quiet || git commit -m "📄 Update README (auto-generated)"
+          
+          # Push changes back to the main branch
+          git push
+        env:
+          # Uses GITHUB_TOKEN secret to authenticate without password
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
